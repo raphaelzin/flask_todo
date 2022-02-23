@@ -22,6 +22,12 @@ class TaskDAO():
         try:
             stmt = select(TaskData).where(TaskData.id == task_id)
             result = self._db_session.execute(stmt).scalars().one()
+            
+            # print(f"###############################################", file=sys.stderr)
+            # tags = result.tags
+            # map(lambda x: print(f"tags: {x.title}", file=sys.stderr), tags)
+            # print(f"###############################################", file=sys.stderr)
+            
             task = Task.from_orm(result)
         except ValueError as e:
             print(f"Error: {e}", file=sys.stderr)

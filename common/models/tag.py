@@ -49,7 +49,7 @@ class Tag(BaseModel):
             if 'updated_at' in data: del data['updated_at']
         return TagData(**data)
 
-# class TaskTag(BaseData):
-#     __tablename__ = 'task_tag'
-#     tag_id = Column(Integer, ForeignKey('tag.id'), primary_key=True)
-#     task_id = Column(Integer, ForeignKey('task.id'), primary_key=True)
+class TaskTag(BaseData):
+    __tablename__ = 'task_tag'
+    tag_id = Column(Integer, ForeignKey('tag.id'), primary_key=True)
+    task_id = Column(Integer, ForeignKey('task.id'), primary_key=True)
