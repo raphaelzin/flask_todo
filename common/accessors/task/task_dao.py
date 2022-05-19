@@ -1,16 +1,20 @@
 from common.models.task import Task, TaskData
-from sqlalchemy import select
-from sqlalchemy.orm.exc import NoResultFound
+
 from common.cache import cache
 import json
-import sys
+from sqlalchemy import select
+from common.accessors.BasePersistenceDataSource import BasePersistenceDataSource as DBDataSource
+from common.accessors.BaseCacheDataSource import BaseCacheDataSource as CacheDataSource
+
 
 class TaskDAO():
-    def __init__(self, dbSession):
-        self._db_session = dbSession
+    def __init__(self, dbSession, cacheSession):
+        self.cacheDataSource = CacheDataSource[Task, TaskData](cacheSession)
+        self.persistentDataSource = DBDataSource[Task, TaskData](dbSession)
 
     def get_all_tasks(self):
         tasks: List[Task] = []
+
         try:
             stmt = select(TaskData)
             for row in self._db_session.execute(stmt).scalars():
@@ -20,27 +24,14 @@ class TaskDAO():
         return tasks
 
     def get_task_by_uuid(self, task_id) -> Task:
-
-        if cache.exists(task_id):
-            cached_data = json.loads(cache.get(task_id).decode("utf-8"))
-            return Task(**cached_data)
-
-        task: Task = None
-        try:
-            stmt = select(TaskData).where(TaskData.id == task_id)
-            result = self._db_session.execute(stmt).scalars().one()            
-            task = Task.from_orm(result)
-
-            json_data = json.dumps(task.to_dict())
-            cache.set(task_id, json_data)
-        except ValueError as e:
-            print(f"Error: {e}", file=sys.stderr)
-        except NoResultFound:
-            print("No result found for Task UUID {0}".format(str(task_id)))
-        except Exception as e:
-            print(f"Error: {e}", file=sys.stderr)
-        return task
-
+        cached = self.cacheDataSource.get_by_id(task_id)
+        if cached:
+            return cached
+        
+        obj = self.persistentDataSource.get_by_id(task_id)
+        self.cacheDataSource.cache(task_id, json.dumps(obj.to_dict()))
+        return obj
+        
     def save_task(self, task: Task):
         if task.id is not None:
             try:

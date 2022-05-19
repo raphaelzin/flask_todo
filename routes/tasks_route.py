@@ -1,14 +1,15 @@
 from flask import jsonify, request, Blueprint
 from common.models.task import Task
-from common.accessors.task_dao import TaskDAO as TaskDB
+from common.accessors.task.task_dao import TaskDAO as TaskDB
 from common.database import get_session
+from common.cache import cache as cache_session
 
 tasks_route = Blueprint('tasks_route', __name__)
 
 @tasks_route.route('/tasks/<task_id>', methods = ['GET', 'DELETE', 'PUT'])
 def task(task_id):
     session = get_session()
-    taskDB = TaskDB(session)
+    taskDB = TaskDB(session, cache_session)
 
     if request.method == "GET":
         taskdata = taskDB.get_task_by_uuid(task_id)
