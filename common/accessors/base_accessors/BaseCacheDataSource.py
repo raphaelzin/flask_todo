@@ -1,5 +1,5 @@
 import json
-from typing import Generic
+from typing import Generic, List
 from common.accessors.base_accessors.BaseDataSource import Model, ModelData, BaseDataSource
 
 class BaseCacheDataSource(BaseDataSource[Model, ModelData], Generic[Model, ModelData]):
@@ -13,6 +13,9 @@ class BaseCacheDataSource(BaseDataSource[Model, ModelData], Generic[Model, Model
 
         cached_data = json.loads(self._cache_session.get(id).decode("utf-8"))
         return self.modelType(**cached_data)
+
+    def get_all(self) -> List[Model]:
+        pass
 
     def save(self, model: Model) -> Model:
         json_data = json.dumps(model.to_dict())

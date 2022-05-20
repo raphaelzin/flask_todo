@@ -13,15 +13,7 @@ class TaskDAO():
         self.persistentDataSource = DBDataSource[Task, TaskData](dbSession)
 
     def get_all_tasks(self):
-        tasks: List[Task] = []
-
-        try:
-            stmt = select(TaskData)
-            for row in self._db_session.execute(stmt).scalars():
-                tasks.append(Task.from_orm(row))
-        except ValueError as e:
-            print(f"Error: {e}")
-        return tasks
+        return self.persistentDataSource.get_all()
 
     def get_task_by_uuid(self, task_id) -> Task:
         cached = self.cacheDataSource.get_by_id(task_id)

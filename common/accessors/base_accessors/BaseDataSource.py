@@ -1,5 +1,5 @@
-from abc import ABC, abstractmethod, ABCMeta
-from typing import Mapping, TypeVar, Generic
+from abc import ABC, abstractmethod
+from typing import TypeVar, Generic, List
 from common.base_data import BaseData
 from common.base_model import BaseModel
 
@@ -30,4 +30,8 @@ class BaseDataSource(ABC, Generic[Model, ModelData]):
 
     @abstractmethod
     def create(model: Model) -> Model:
+        pass
+
+    @abstractmethod
+    def get_all(self) -> List[Model]:
         pass

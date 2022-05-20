@@ -1,4 +1,4 @@
-from typing import Generic
+from typing import Generic, List
 from sqlalchemy import select
 from sqlalchemy.orm.exc import NoResultFound
 from common.accessors.base_accessors.BaseDataSource import Model, ModelData, BaseDataSource
@@ -22,6 +22,17 @@ class BasePersistenceDataSource(BaseDataSource[Model, ModelData], Generic[Model,
             print("No result found for UUID {0}".format(str(id)))
         
         return model
+
+    def get_all(self) -> List[Model]:
+        models: List[self.modelType] = []
+
+        try:
+            stmt = select(self.dataModelType)
+            for row in self._db_session.execute(stmt).scalars():
+                models.append(self.modelType.from_orm(row))
+        except ValueError as e:
+            print(f"Error: {e}")
+        return models
 
     def save(self, model: Model) -> Model:
         if model.id is not None:

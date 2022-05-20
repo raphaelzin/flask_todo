@@ -38,7 +38,7 @@ def task(task_id):
 def create_task():
     session = get_session()
     if request.method == "POST":
-        taskDB = TaskDB(session)
+        taskDB = TaskDB(session, cache_session)
         task = Task(**request.json)
         taskDB.save_task(task)
         return task.to_dict()
@@ -46,7 +46,7 @@ def create_task():
 @tasks_route.route('/tasks/', methods = ['GET'])
 def tasks():
     session = get_session()
-    taskDB = TaskDB(session)
+    taskDB = TaskDB(session, cache_session)
     tasks = taskDB.get_all_tasks()
     dictTasks = list(map(lambda x: x.to_dict(), tasks))
     return jsonify(dictTasks)
