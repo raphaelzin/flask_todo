@@ -26,8 +26,10 @@ class TaskDAO():
         
     def save_task(self, task: Task):
         object = self.persistentDataSource.save(task)
-        if object:
+        if object is not None:
             self.cacheDataSource.save(object)
+        else:
+            self.cacheDataSource.delete(task.id)
 
     def delete_task(self, task_id):
         self.persistentDataSource.delete(task_id)

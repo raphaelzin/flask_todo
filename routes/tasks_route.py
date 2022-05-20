@@ -50,3 +50,16 @@ def tasks():
     tasks = taskDB.get_all_tasks()
     dictTasks = list(map(lambda x: x.to_dict(), tasks))
     return jsonify(dictTasks)
+    
+@tasks_route.route('/tasks/<task_id>/toggle', methods = ['POST'])
+def toggle_done(task_id):
+    session = get_session()
+    taskDB = TaskDB(session, cache_session)
+
+    task = taskDB.get_task_by_uuid(task_id)
+    if not task:
+        return "Task not found", 404
+
+    task.is_done = not task.is_done
+    taskDB.save_task(task)
+    return task.to_dict()
