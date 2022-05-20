@@ -22,15 +22,15 @@ def task(task_id):
         if 'id' not in request.json:
             return "Request's body missing ID", 400
         id = request.json["id"]
-        if id is None or id != task_id:
-            return "request's body's ID doesn't match url's id", 400
+        if id is None or id != int(task_id):
+            return f"request's body's ID ({id}) doesn't match url's id ({task_id})", 400
 
         task = Task(**request.json)
         taskDB.save_task(task)
         return task.to_dict()
         
     if request.method == "DELETE":
-        taskdata = taskDB._delete_task(task_id)
+        taskdata = taskDB.delete_task(task_id)
         return f"Task {task_id} Deleted"
     return
 

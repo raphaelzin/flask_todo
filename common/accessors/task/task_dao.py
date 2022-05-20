@@ -1,10 +1,10 @@
-from common.models.task import Task, TaskData
-
-from common.cache import cache
 import json
+from typing import List
+from common.models.task import Task, TaskData
+from common.cache import cache
 from sqlalchemy import select
-from common.accessors.BasePersistenceDataSource import BasePersistenceDataSource as DBDataSource
-from common.accessors.BaseCacheDataSource import BaseCacheDataSource as CacheDataSource
+from common.accessors.base_accessors.BasePersistenceDataSource import BasePersistenceDataSource as DBDataSource
+from common.accessors.base_accessors.BaseCacheDataSource import BaseCacheDataSource as CacheDataSource
 
 
 class TaskDAO():
@@ -20,7 +20,7 @@ class TaskDAO():
             for row in self._db_session.execute(stmt).scalars():
                 tasks.append(Task.from_orm(row))
         except ValueError as e:
-            print(f"Error: {e}") 
+            print(f"Error: {e}")
         return tasks
 
     def get_task_by_uuid(self, task_id) -> Task:
@@ -29,45 +29,14 @@ class TaskDAO():
             return cached
         
         obj = self.persistentDataSource.get_by_id(task_id)
-        self.cacheDataSource.cache(task_id, json.dumps(obj.to_dict()))
+        self.cacheDataSource.save(obj)
         return obj
         
     def save_task(self, task: Task):
-        if task.id is not None:
-            try:
-                self._update_task(task)
-            except Exception as e:
-                raise e
-        else:
-            # create
-            try:
-                self._create_task(task.to_data())
-            except Exception as e:
-                raise e
+        object = self.persistentDataSource.save(task)
+        if object:
+            self.cacheDataSource.save(object)
 
-    def _delete_task(self, task_id):
-        stmt = select(TaskData).where(TaskData.id == task_id)
-        result = self._db_session.execute(stmt).scalars().one()
-        self._db_session.delete(result)
-        self._db_session.commit()
-        
-        cache.delete(task_id)
-        pass
-
-    def _update_task(self, task_data):
-        stmt = select(TaskData).where(TaskData.id == task_data.id)
-        result = self._db_session.execute(stmt).scalars().one()
-        result.update(task_data)
-        self._db_session.commit()
-
-        json_data = json.dumps(Task.from_orm(result).to_dict())
-        cache.set(task_data.id, json_data)
-        pass
-
-    def _create_task(self, task_data: TaskData):
-        self._db_session.add(task_data)
-        self._db_session.commit()
-        
-        json_data = json.dumps(Task.from_orm(task_data).to_dict())
-        cache.set(task_data.id, json_data)
-        pass
+    def delete_task(self, task_id):
+        self.persistentDataSource.delete(task_id)
+        self.cacheDataSource.delete(task_id)
